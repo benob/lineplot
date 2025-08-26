@@ -13,7 +13,7 @@ for i in range(100):
     time.sleep(0.25)
 """
 
-__version__ = "0.1.5"
+__version__ = "0.1.6"
 
 from IPython.display import display, HTML, Javascript
 import random, json
@@ -24,6 +24,7 @@ class LinePlot:
       if colors == []:
         colors = ['red', 'green', 'blue', 'gold', 'magenta', 'cyan']
       self.id = random.randint(1, 10000000)
+      self.values = {}
       display(HTML(f"""
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <div style="width: 50%">
@@ -52,19 +53,19 @@ function f() {{
   window.chart_add{self.id} = function(metrics) {{
     const chart = window.chart{self.id};
     chart.data.labels.push(chart.data.labels.length);
-    for (const [key, value] of Object.entries(metrics)) {{
+    for (const [key, values] of Object.entries(metrics)) {{
       if (mapping[key] === undefined) {{
         mapping[key] = chart.data.datasets.length;
         chart.data.datasets.push({{
           label: key,
-          data: [value],
+          data: values,
           borderWidth: 1,
           borderColor: colors[mapping[key] % colors.length],
           backgroundColor: colors[mapping[key] % colors.length],
           pointStyle: false,
         }});
       }} else {{
-        chart.data.datasets[mapping[key]].data.push(value);
+        chart.data.datasets[mapping[key]].data = values;
       }}
     }}
     chart.update();
@@ -76,5 +77,9 @@ f();
 
     def add(self, **metrics):
       """Adds metrics to the plot, specified as named arguments"""
-      self.script.update(Javascript(f'''chart_add{self.id}({json.dumps(metrics)});'''))
+      for key, value in metrics.items():
+        if key not in self.values:
+          self.values[key] = []
+        self.values[key].append(value)
+      self.script.update(Javascript(f'''chart_add{self.id}({json.dumps(self.values)});'''))
 
