@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lineplot"
-version = "0.2.0"
+version = "0.2.1"
 description = "A minimalist line plotting package for live updates from jupyter notebooks."
 readme = "README.md"
 license = "MIT"

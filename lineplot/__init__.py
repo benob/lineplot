@@ -1,5 +1,5 @@
 """
-A minimalist line plotting package for live updates from jupyter notebooks. Works on google colab.
+A minimalist line plotting package for live updates from jupyter notebooks. Works in google colab.
 
 Example:
 
@@ -7,22 +7,24 @@ from lineplot import LinePlot
 import numpy as np
 import time
 
-plot = LinePlot('green', 'blue')
+plot = LinePlot()
 for i in range(100):
     plot.add(loss=1 / (i + 1), acc=1 - np.random.rand() / (i + 1))
     time.sleep(0.25)
 """
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 from IPython.display import display, HTML, Javascript
 import random, json
 
 class LinePlot:
-    def __init__(self, width="50%", height="auto", colors=['blue', 'green', 'red', 'gold', 'magenta', 'cyan', 'purple', 'orange', 'brown']):
-      """Instanciates a new line plot. A color needs to be provided for each metric."""
+    def __init__(self, width="50%", height="auto", x_ticks=16, y_ticks=5, colors=['blue', 'green', 'red', 'gold', 'magenta', 'cyan', 'purple', 'orange', 'brown']):
+      """Instanciates a new line plot. You can specify a width, height of the widget in CSS units. x_ticks and y_ticks select the maximum number of ticks. A list of colors can to be provided for the different lines."""
       self.width = width
       self.height = height
+      self.x_ticks = x_ticks - 1
+      self.y_ticks = y_ticks - 1
       self.colors = colors
       self.id = random.randint(1, 10000000)
       self.values = {}
@@ -36,11 +38,11 @@ class LinePlot:
         self.values[key].append(value)
 
       dataset = []
-      for (key, value), color in zip(self.values.items(), self.colors[:len(self.values.keys())]):
+      for i, (key, value) in enumerate(self.values.items()):
         dataset.append({
           'name': key,
           'values': value,
-          'color':  color,
+          'color':  self.colors[i % len(self.colors)],
         })
         
       self.script.update(HTML(f'''
@@ -48,6 +50,8 @@ class LinePlot:
   <script>
     function f() {{
     const datasets = {json.dumps(dataset)};
+
+    if (datasets[0].values.length < 2) return;
 
     const canvas = document.getElementById('linePlot');
     const rect = canvas.getBoundingClientRect();
@@ -75,7 +79,7 @@ class LinePlot:
     const stepX = (width - 2 * padding) / (numPoints - 1);
 
     // Add Y-axis grid lines, ticks, and labels
-    const numYTicks = 5;
+    const numYTicks = {self.y_ticks};
     for (let i = 0; i <= numYTicks; i++) {{
       const value = minVal + (i / numYTicks) * (maxVal - minVal);
       const y = getY(value);
@@ -97,9 +101,9 @@ class LinePlot:
     }}
 
     // Add X-axis grid lines, ticks, and labels
-    const numXTicks = 15;
+    const numXTicks = numPoints < {self.x_ticks} ? numPoints : {self.x_ticks};
     for (let i = 0; i < numXTicks; i++) {{
-      const index = Math.round(i * (numPoints - 1) / (numXTicks - 1));
+      const index = i * (numPoints - 1) / (numXTicks - 1);
       const x = padding + index * stepX;
       const y = height - padding;
 
@@ -116,7 +120,7 @@ class LinePlot:
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
       ctx.fillStyle = "#000";
-      ctx.fillText(i, x, y + 8);
+      ctx.fillText(index.toFixed(0), x, y + 8);
     }}
 
     // Draw each dataset
