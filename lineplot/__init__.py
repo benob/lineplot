@@ -33,8 +33,8 @@ class LinePlot:
 """))
       display(Javascript(f"""
 function f() {{
-  const ctx = document.getElementById('chart{self.id}').getContext('2d');
-  window.chart{self.id} = new Chart(ctx, {{
+  const self = document.getElementById('chart{self.id}');
+  self.chart = new Chart(self.getContext('2d'), {{
       type: 'line',
       data: {{
         labels: [],
@@ -50,13 +50,12 @@ function f() {{
   const mapping = {{}};
   const colors = {json.dumps(colors)};
 
-  window.chart_add{self.id} = function(metrics) {{
-    const chart = window.chart{self.id};
-    chart.data.labels.push(chart.data.labels.length);
+  self.chart_add = function(metrics) {{
+    self.chart.data.labels.push(self.chart.data.labels.length);
     for (const [key, values] of Object.entries(metrics)) {{
       if (mapping[key] === undefined) {{
-        mapping[key] = chart.data.datasets.length;
-        chart.data.datasets.push({{
+        mapping[key] = self.chart.data.datasets.length;
+        self.chart.data.datasets.push({{
           label: key,
           data: values,
           borderWidth: 1,
@@ -65,10 +64,10 @@ function f() {{
           pointStyle: false,
         }});
       }} else {{
-        chart.data.datasets[mapping[key]].data = values;
+        self.chart.data.datasets[mapping[key]].data = values;
       }}
     }}
-    chart.update();
+    self.chart.update();
   }}
 }}
 f();
@@ -81,5 +80,8 @@ f();
         if key not in self.values:
           self.values[key] = []
         self.values[key].append(value)
-      self.script.update(Javascript(f'''chart_add{self.id}({json.dumps(self.values)});'''))
+      self.script.update(Javascript(f'''
+const self = document.getElementById('chart{self.id}');
+self.chart_add({json.dumps(self.values)});
+'''))
 
