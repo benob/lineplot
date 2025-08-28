@@ -13,13 +13,13 @@ for i in range(100):
     time.sleep(0.25)
 """
 
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 
 from IPython.display import display, HTML, Javascript
 import random, json
 
 class LinePlot:
-    def __init__(self, width="50%", height="auto", x_ticks=16, y_ticks=5, colors=['blue', 'green', 'red', 'gold', 'magenta', 'cyan', 'purple', 'orange', 'brown']):
+    def __init__(self, width="700px", height="auto", x_ticks=16, y_ticks=5, colors=['blue', 'green', 'red', 'gold', 'magenta', 'cyan', 'purple', 'orange', 'brown']):
       """Instanciates a new line plot. You can specify a width, height of the widget in CSS units. x_ticks and y_ticks select the maximum number of ticks. A list of colors can to be provided for the different lines."""
       self.width = width
       self.height = height
@@ -28,7 +28,7 @@ class LinePlot:
       self.colors = colors
       self.id = random.randint(1, 10000000)
       self.values = {}
-      self.script = display(HTML('<canvas style="width: {self.width}; height: {self.height}"></canvas>'), display_id=True)
+      self.script = display(HTML('<canvas id="{self.id}" style="width: {self.width}; height: {self.height}"></canvas>'), display_id=True)
 
     def add(self, **metrics):
       """Adds metrics to the plot, specified as named arguments"""
@@ -46,14 +46,14 @@ class LinePlot:
         })
         
       self.script.update(HTML(f'''
-  <canvas id="linePlot" style="width: {self.width}; height: {self.height}"></canvas>
+  <canvas id="{self.id}" style="width: {self.width}; height: {self.height}"></canvas>
   <script>
     function f() {{
     const datasets = {json.dumps(dataset)};
 
     if (datasets[0].values.length < 2) return;
 
-    const canvas = document.getElementById('linePlot');
+    const canvas = document.getElementById('{self.id}');
     const rect = canvas.getBoundingClientRect();
     canvas.width = rect.width;
     canvas.height = rect.height;
@@ -133,7 +133,7 @@ class LinePlot:
         ctx.lineTo(x, y);
       }});
       ctx.strokeStyle = ds.color;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1.5;
       ctx.stroke();
     }});
 
@@ -143,7 +143,7 @@ class LinePlot:
     ctx.lineTo(padding, height - padding);
     ctx.lineTo(width - padding, height - padding);
     ctx.strokeStyle = "#000";
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1.5;
     ctx.stroke();
 
 
